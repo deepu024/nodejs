@@ -1,3 +1,5 @@
+const User = require('../schemas/User.schema');
+
 const {z} = require('zod');
 
 const userObj = z.object({
@@ -7,12 +9,14 @@ const userObj = z.object({
     phoneNumber: z.string().min(10, "Phone number must be 10 digits").max(10, "Phone number must be 10 digits"),
 });
 
-const GetUsers = (req, res) => {
-    return res.send({
-        name: "John Doe",
-        age: 30,
-        email: "john.doe@example.com"
-    });
+const GetUsers = async (req, res) => {
+    try {
+        const users = await User.find({});
+
+        return res.send(users);
+    } catch (error) {
+        return res.send(500).send({message: error.message});
+    }
 };
 
 const GetUserById = (req, res) => {
@@ -21,13 +25,21 @@ const GetUserById = (req, res) => {
     return res.send({"id": id});
 }
 
-const CreateUser = (req, res) => {
+const CreateUser = async (req, res) => {
     try {
         const { name, age, email, phoneNumber } = req.body;
 
         const user = userObj.parse({name, age, email, phoneNumber});
 
-        console.log(user);
+        if(!user) {
+            return res.status(400).send({
+                message: "Invalid user data",
+            });
+        }
+
+        await User.create({
+            name, age, email, phoneNumber
+        });      
 
         return res.status(201).send({
             "message": "User created successfully",
@@ -50,6 +62,10 @@ const CreateUser = (req, res) => {
                 errors: errorMessages,
             });
         }
+
+        return res.status(500).send({
+            message: error.message,
+        });
     }
     
 }
@@ -59,10 +75,17 @@ const UpdateUser = (req, res) => {
     return res.status(200).send({"id": id});
 }
 
-const DeleteUser = (req, res) => {
-    const { id } = req.params;
-
-    return res.status(200).send({"id": id});
+const DeleteUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findByIdAndDelete({_id: id});
+        return res.status(200).send(user);   
+    } catch (error) {
+        return res.status(500).send({
+            message: error.message,
+        });
+    }
+    
 }
 
 module.exports = {DeleteUser, UpdateUser, CreateUser,GetUserById,GetUsers}
