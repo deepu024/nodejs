@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const UserRoutes = require('./routes/User');
 const app = express();
 
+// this is database url
 const dataBaseUrl = "mongodb+srv://deepanshu:deepanshu@cluster0.sbmah.mongodb.net/test";
 
 mongoose.connect(dataBaseUrl, {
